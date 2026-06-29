@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 using Rachmistrz.Web.Components;
 using Rachmistrz.Web.Components.Account;
 using Rachmistrz.Web.Data;
@@ -13,9 +14,13 @@ namespace Rachmistrz.Web
         {
             var builder = WebApplication.CreateBuilder(args);
 
+
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
+
+            // Add MudBlazor
+            builder.Services.AddMudServices();
 
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddScoped<IdentityRedirectManager>();
