@@ -1,4 +1,6 @@
-﻿namespace Rachmistrz.Web.Models
+﻿using Rachmistrz.Web.Data;
+
+namespace Rachmistrz.Web.Models
 {
     public class Branch
     {
@@ -8,5 +10,8 @@
         public string City { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
+
+        public ICollection<ApplicationUser> Users { get; set; }
+        = new List<ApplicationUser>();
      }
 }
