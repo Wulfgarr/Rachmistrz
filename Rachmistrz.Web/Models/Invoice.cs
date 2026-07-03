@@ -48,4 +48,12 @@ public class Invoice
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? UpdatedAt { get; set; }
+
+    // Comments assigned to invoice.
+    public ICollection<InvoiceComment> Comments { get; set; }
+        = new List<InvoiceComment>();
+
+    // Invoice changes history.
+    public ICollection<InvoiceAuditLog> AuditLogs { get; set; }
+        = new List<InvoiceAuditLog>();
 }

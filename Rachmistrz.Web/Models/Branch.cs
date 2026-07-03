@@ -13,5 +13,8 @@ namespace Rachmistrz.Web.Models
 
         public ICollection<ApplicationUser> Users { get; set; }
         = new List<ApplicationUser>();
-     }
+
+        public ICollection<Invoice> Invoices { get; set; }
+    = new List<Invoice>();
+    }
 }

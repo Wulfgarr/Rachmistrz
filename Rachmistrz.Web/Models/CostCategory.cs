@@ -10,4 +10,7 @@ public class CostCategory
 
     // Can not delete, only activate/deactivate
     public bool IsActive { get; set; } = true;
+
+    public ICollection<Invoice> Invoices { get; set; }
+    = new List<Invoice>();
 }

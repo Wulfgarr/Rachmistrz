@@ -16,4 +16,7 @@ public class Supplier
 
     // Can not delete supplier, only activate/deactivate.
     public bool IsActive { get; set; } = true;
+
+    public ICollection<Invoice> Invoices { get; set; }
+    = new List<Invoice>();
 }

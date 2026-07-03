@@ -11,6 +11,15 @@ namespace Rachmistrz.Web.Data
         public int? BranchId { get; set; }
         public Branch? Branch { get; set; }
 
+        public ICollection<Invoice> CreatedInvoices { get; set; }
+    = new List<Invoice>();
+
+        public ICollection<InvoiceComment> InvoiceComments { get; set; }
+            = new List<InvoiceComment>();
+
+        public ICollection<InvoiceAuditLog> InvoiceAuditLogs { get; set; }
+            = new List<InvoiceAuditLog>();
+
     }
 
 }
