@@ -80,6 +80,7 @@ namespace Rachmistrz.Web
 
             await DatabaseSeeder.SeedRolesAsync(app.Services);
             await DatabaseSeeder.SeedAdminUserAsync(app.Services);
+            await DatabaseSeeder.SeedBusinessDataAsync(app.Services);
 
             app.Run();
         }
