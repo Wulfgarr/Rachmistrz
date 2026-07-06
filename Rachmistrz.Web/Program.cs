@@ -5,12 +5,13 @@ using MudBlazor.Services;
 using Rachmistrz.Web.Components;
 using Rachmistrz.Web.Components.Account;
 using Rachmistrz.Web.Data;
+using Rachmistrz.Web.Seed;
 
 namespace Rachmistrz.Web
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +44,7 @@ namespace Rachmistrz.Web
                     options.SignIn.RequireConfirmedAccount = true;
                     options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
                 })
+                .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddSignInManager()
                 .AddDefaultTokenProviders();
@@ -50,6 +52,7 @@ namespace Rachmistrz.Web
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
             var app = builder.Build();
+
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -74,6 +77,10 @@ namespace Rachmistrz.Web
 
             // Add additional endpoints required by the Identity /Account Razor components.
             app.MapAdditionalIdentityEndpoints();
+
+            await DatabaseSeeder.SeedRolesAsync(app.Services);
+            await DatabaseSeeder.SeedAdminUserAsync(app.Services);
+            await DatabaseSeeder.SeedBusinessDataAsync(app.Services);
 
             app.Run();
         }
