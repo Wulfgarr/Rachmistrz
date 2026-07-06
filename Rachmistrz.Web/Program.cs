@@ -79,6 +79,7 @@ namespace Rachmistrz.Web
             app.MapAdditionalIdentityEndpoints();
 
             await DatabaseSeeder.SeedRolesAsync(app.Services);
+            await DatabaseSeeder.SeedAdminUserAsync(app.Services);
 
             app.Run();
         }
