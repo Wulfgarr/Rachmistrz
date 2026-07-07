@@ -6,6 +6,7 @@ using Rachmistrz.Web.Components;
 using Rachmistrz.Web.Components.Account;
 using Rachmistrz.Web.Data;
 using Rachmistrz.Web.Seed;
+using Rachmistrz.Web.Services;
 
 namespace Rachmistrz.Web
 {
@@ -15,7 +16,6 @@ namespace Rachmistrz.Web
         {
             var builder = WebApplication.CreateBuilder(args);
 
-
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
@@ -24,6 +24,7 @@ namespace Rachmistrz.Web
             builder.Services.AddMudServices();
 
             builder.Services.AddCascadingAuthenticationState();
+            builder.Services.AddScoped<BranchService>();
             builder.Services.AddScoped<IdentityRedirectManager>();
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
