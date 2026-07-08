@@ -1,0 +1,71 @@
+﻿@page "/branches"
+
+@using Rachmistrz.Web.Models
+@using Rachmistrz.Web.Services
+
+@inject BranchService BranchService
+
+<PageTitle>Branches</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Oddziały
+</MudText>
+
+@if (_isLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_branches.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">
+        Brak oddziałów do wyświetlenia.
+    </MudAlert>
+}
+else
+{
+    <MudTable Items="_branches" Hover="true" Dense="true">
+        <HeaderContent>
+            <MudTh>Kod</MudTh>
+            <MudTh>Nazwa</MudTh>
+            <MudTh>Miasto</MudTh>
+            <MudTh>Adres</MudTh>
+            <MudTh>Status</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd DataLabel="Kod">@context.Code</MudTd>
+            <MudTd DataLabel="Nazwa">@context.Name</MudTd>
+            <MudTd DataLabel="Miasto">@context.City</MudTd>
+            <MudTd DataLabel="Adres">@context.Address</MudTd>
+            <MudTd DataLabel="Status">
+                @if (context.IsActive)
+                {
+                    <MudChip T="string"
+                             Color="Color.Success"
+                             Size="Size.Small">
+                        Aktywny
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string"
+                             Color="Color.Default"
+                             Size="Size.Small">
+                        Nieaktywny
+                    </MudChip>
+                }
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private List<Branch> _branches = [];
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _branches = await BranchService.GetBranchesAsync();
+        _isLoading = false;
+    }
+}
