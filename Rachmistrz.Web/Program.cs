@@ -26,6 +26,7 @@ namespace Rachmistrz.Web
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddScoped<BranchService>();
             builder.Services.AddScoped<SupplierService>();
+            builder.Services.AddScoped<CostCategoryService>();
             builder.Services.AddScoped<IdentityRedirectManager>();
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
