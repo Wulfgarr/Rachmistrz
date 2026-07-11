@@ -1,0 +1,70 @@
+﻿@page "/cost-categories"
+
+@using Rachmistrz.Web.Models;
+@using Rachmistrz.Web.Services;
+
+@inject CostCategoryService CostCategoryService
+
+<PageTitle>Cost Categories</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Kategorie kosztów
+</MudText>
+
+@if (_isLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_costCategories.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">
+        Brak kategorii kosztów do wyświetlenia
+    </MudAlert>
+}
+else
+{
+    <MudTable Items="_costCategories" Hover="true" Dense="true">
+        <HeaderContent>
+            <MudTh>Nazwa</MudTh>
+            <MudTh>Opis</MudTh>
+            <MudTh>Status</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd DataLabel="Nazwa">@context.Name</MudTd>
+            <MudTd DataLabel="Opis">@context.Description</MudTd>
+            <MudTd DataLabel="Status">
+                @if (context.IsActive)
+                {
+                    <MudChip T="string"
+                             Color="Color.Success"
+                             Size="Size.Small">
+                        Aktywna
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string"
+                             Color="Color.Default"
+                             Size="Size.Small">
+                        Nieaktywna
+                    </MudChip>
+
+                }
+            </MudTd>
+
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private List<CostCategory> _costCategories = [];
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _costCategories = await CostCategoryService.GetCostCategoriesAsync();
+        _isLoading = false;
+    }
+
+}
