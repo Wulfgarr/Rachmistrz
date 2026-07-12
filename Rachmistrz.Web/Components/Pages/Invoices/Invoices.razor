@@ -1,0 +1,82 @@
+﻿@page "/invoices"
+
+@using Rachmistrz.Web.DTOs
+@using Rachmistrz.Web.Services
+
+@inject InvoiceService InvoiceService
+
+<PageTitle>Invoices</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Faktury
+</MudText>
+
+@if (_isLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_invoices.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">
+        Brak faktur do wyświetlenia.
+    </MudAlert>
+}
+else
+{
+    <MudTable Items="_invoices" Hover="true" Dense="true">
+        <HeaderContent>
+            <MudTh>Numer faktury</MudTh>
+            <MudTh>Dostawca</MudTh>
+            <MudTh>Oddział</MudTh>
+            <MudTh>Kategoria</MudTh>
+            <MudTh>Kwota brutto</MudTh>
+            <MudTh>Termin płatności</MudTh>
+            <MudTh>Status</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd DataLabel="Numer faktury">@context.InvoiceNumber</MudTd>
+            <MudTd DataLabel="Dostawca">@context.SupplierName</MudTd>
+            <MudTd DataLabel="Oddział">@context.BranchName</MudTd>
+            <MudTd DataLabel="Kategoria">@context.CostCategoryName</MudTd>
+            <MudTd DataLabel="Kwota brutto">@context.GrossAmount.ToString("C")</MudTd>
+            <MudTd DataLabel="Termin płatności">@context.DueDate.ToShortDateString()</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string"
+                         Color="GetStatusColor(context.Status)"
+                         Size="Size.Small">
+                    @context.Status
+                </MudChip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+
+@code {
+    private List<InvoiceListItemDto> _invoices = [];
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _invoices = await InvoiceService.GetInvoicesAsync();
+        _isLoading = false;
+    }
+
+    private static Color GetStatusColor(Rachmistrz.Web.Enums.InvoiceStatus status)
+    {
+        return status switch
+        {
+            Rachmistrz.Web.Enums.InvoiceStatus.Draft => Color.Default,
+            Rachmistrz.Web.Enums.InvoiceStatus.Submitted => Color.Info,
+            Rachmistrz.Web.Enums.InvoiceStatus.UnderReview => Color.Warning,
+            Rachmistrz.Web.Enums.InvoiceStatus.Approved => Color.Success,
+            Rachmistrz.Web.Enums.InvoiceStatus.Rejected => Color.Error,
+            Rachmistrz.Web.Enums.InvoiceStatus.Booked => Color.Primary,
+            Rachmistrz.Web.Enums.InvoiceStatus.Paid => Color.Success,
+            Rachmistrz.Web.Enums.InvoiceStatus.Cancelled => Color.Default,
+            _ => Color.Default
+
+        };
+    }
+}
