@@ -1,0 +1,189 @@
+﻿@page "/invoices/create"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Rachmistrz.Web.Data
+@using Rachmistrz.Web.DTOs
+@using Rachmistrz.Web.Models
+@using Rachmistrz.Web.Services
+
+@inject InvoiceService InvoiceService
+@inject SupplierService SupplierService
+@inject BranchService BranchService
+@inject CostCategoryService CostCategoryService
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Invoice</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Dodaj fakturę
+</MudText>
+
+@if (_isLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudPaper Class="pa-4" MaxWidth="900px">
+        <EditForm Model="_model" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.InvoiceNumber"
+                                  Label="Numer faktury"
+                                  For="@(() => _model.InvoiceNumber)"
+                                  Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect @bind-Value="_model.SupplierId"
+                               Label="Dostawca"
+                               For="@(() => _model.SupplierId)"
+                               Required="true" />
+                    @foreach (var supplier in _suppliers)
+                    {
+                        <MudSelectItem T="int?" Value="@supplier.Id">
+                            @supplier.Name
+                        </MudSelectItem>
+                    }
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect @bind-Value="_model.BranchId"
+                               Label="Oddział"
+                               For="@(() => _model.BranchId)"
+                               Required="true" />
+                    @foreach (var branch in _branches)
+                    {
+                        <MudSelectItem T="int?" Value="@branch.Id">
+                            @branch.Name
+                        </MudSelectItem>
+                    }
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect @bind-Value="_model.CostCategoryId"
+                               Label="Kategoria kosztów"
+                               For="@(() => _model.CostCategoryId)"
+                               Required="true" />
+                    @foreach (var costCategory in _costCategories)
+                    {
+                        <MudSelectItem T="int?" Value="@costCategory.Id">
+                            @costCategory.Name
+                        </MudSelectItem>
+                    }
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudDatePicker @bind-Date="_model.IssueDate"
+                                   Label="Data wystawienia"
+                                   For="@(() => _model.IssueDate)"
+                                   Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudDatePicker @bind-Date="_model.ReceivedDate"
+                                   Label="Data otrzymania"
+                                   For="@(() => _model.ReceivedDate)"
+                                   Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudDatePicker @bind-Date="_model.DueDate"
+                                   Label="Termin płatności"
+                                   For="@(() => _model.DueDate)"
+                                   Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="decimal?"
+                                     @bind-Value="_model.NetAmount"
+                                     Label="Kwota netto"
+                                     For="@(() => _model.NetAmount)"
+                                     Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="decimal?"
+                                     @bind-Value="_model.VatAmount"
+                                     Label="Kwota VAT"
+                                     For="@(() => _model.VatAmount)"
+                                     Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="decimal?"
+                                     @bind-Value="_model.GrossAmount"
+                                     Label="Kwota brutto"
+                                     For="@(() => _model.GrossAmount)"
+                                     Required="true" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_model.Description"
+                                  Label="Opis"
+                                  Lines="3"
+                                  For="@(() => _model.Description)" />
+                </MudItem>
+
+                <MudItem xs="12" Class="d-flex gap-2">
+                    <MudButton ButtonType="ButtonType.Submit"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary">
+                        Zapisz fakturę
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Default"
+                               OnClick="Cancel">
+                        Anuluj
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </MudPaper>
+}
+
+
+@code {
+    private CreateInvoiceDto _model = new();
+
+    private List<Supplier> _suppliers = [];
+    private List<Branch> _branches = [];
+    private List<CostCategory> _costCategories = [];
+
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _suppliers = await SupplierService.GetSuppliersAsync();
+        _branches = await BranchService.GetBranchesAsync();
+        _costCategories = await CostCategoryService.GetCostCategoriesAsync();
+
+        _isLoading = false;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authenticationState.User);
+
+        if (user is null)
+        {
+            return;
+        }
+
+        var invoiceId = await InvoiceService.CreateInvoiceAsync(_model, user.Id);
+
+        NavigationManager.NavigateTo($"/invoices");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/invoices");
+    }
+}
