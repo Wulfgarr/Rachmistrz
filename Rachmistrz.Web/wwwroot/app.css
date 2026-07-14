@@ -58,3 +58,55 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+.numeric-left input {
+    text-align: left;
+}
+
+.numeric-center input {
+    text-align: center;
+}
+
+.numeric-right input {
+    text-align: right;
+    padding-right: 8px !important;
+}
+
+.text-left input {
+    text-align: left;
+}
+
+.text-center input {
+    text-align: center;
+}
+
+.text-right input {
+    text-align: right;
+}
+
+.select-left input,
+.select-left textarea {
+    text-align: left;
+}
+
+.select-center input,
+.select-center textarea {
+    text-align: center;
+}
+
+.select-right input,
+.select-right textarea {
+    text-align: right;
+}
+
+.select-right .mud-input-slot {
+    text-align: right;
+    justify-content: flex-end;
+    padding-right: 8px;
+}
+
+.date-right input {
+    text-align: right;
+    justify-content: flex-end;
+    padding-right: 8px;
+}
