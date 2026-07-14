@@ -40,42 +40,49 @@ else
                 </MudItem>
 
                 <MudItem xs="12" md="6">
-                    <MudSelect @bind-Value="_model.SupplierId"
+                    <MudSelect T="int?"
+                               @bind-Value="_model.SupplierId"
                                Label="Dostawca"
                                For="@(() => _model.SupplierId)"
-                               Required="true" />
-                    @foreach (var supplier in _suppliers)
-                    {
-                        <MudSelectItem T="int?" Value="@supplier.Id">
-                            @supplier.Name
-                        </MudSelectItem>
-                    }
+                               Required="true">
+                        @foreach (var supplier in _suppliers)
+                        {
+                            <MudSelectItem T="int?" Value="@supplier.Id">
+                                @supplier.Name
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
                 </MudItem>
 
                 <MudItem xs="12" md="6">
-                    <MudSelect @bind-Value="_model.BranchId"
+                    <MudSelect T="int?"
+                               @bind-Value="_model.BranchId"
                                Label="Oddział"
                                For="@(() => _model.BranchId)"
-                               Required="true" />
-                    @foreach (var branch in _branches)
-                    {
-                        <MudSelectItem T="int?" Value="@branch.Id">
-                            @branch.Name
-                        </MudSelectItem>
-                    }
+                               Required="true">
+                        @foreach (var branch in _branches)
+                        {
+                            <MudSelectItem T="int?" Value="@branch.Id">
+                                @branch.Name
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
                 </MudItem>
 
                 <MudItem xs="12" md="6">
-                    <MudSelect @bind-Value="_model.CostCategoryId"
+                    <MudSelect T="int?"
+                               @bind-Value="_model.CostCategoryId"
                                Label="Kategoria kosztów"
                                For="@(() => _model.CostCategoryId)"
-                               Required="true" />
-                    @foreach (var costCategory in _costCategories)
-                    {
-                        <MudSelectItem T="int?" Value="@costCategory.Id">
-                            @costCategory.Name
-                        </MudSelectItem>
-                    }
+                               Required="true">
+                        @foreach (var costCategory in _costCategories)
+                        {
+                            <MudSelectItem T="int?" Value="@costCategory.Id">
+                                @costCategory.Name
+                            </MudSelectItem>
+                        }
+
+                    </MudSelect>
                 </MudItem>
 
                 <MudItem xs="12" md="4">
