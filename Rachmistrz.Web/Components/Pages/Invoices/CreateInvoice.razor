@@ -1,5 +1,8 @@
 ﻿@page "/invoices/create"
+@attribute [Authorize]
 
+
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Rachmistrz.Web.Data
@@ -172,6 +175,13 @@ else
                                OnClick="Cancel">
                         Anuluj
                     </MudButton>
+
+                    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+                    {
+                        <MudAlert Severity="Severity.Error" Class="mb-4">
+                            @_errorMessage
+                        </MudAlert>
+                    }
                 </MudItem>
             </MudGrid>
         </EditForm>
@@ -187,7 +197,7 @@ else
     private List<CostCategory> _costCategories = [];
 
     private bool _isLoading = true;
-
+    private string _errorMessage = String.Empty;
     protected override async Task OnInitializedAsync()
     {
         _suppliers = await SupplierService.GetSuppliersAsync();
@@ -204,6 +214,7 @@ else
 
         if (user is null)
         {
+            _errorMessage = "Musisz być zalogowany, żeby dodać fakturę";
             return;
         }
 
