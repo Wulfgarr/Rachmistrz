@@ -1,0 +1,172 @@
+﻿@page "/invoices/{Id:int}"
+
+@using Rachmistrz.Web.DTOs
+@using Rachmistrz.Web.Services
+
+@inject InvoiceService InvoiceService
+@inject NavigationManager NavigationManager
+
+<h3>Szczegóły faktury</h3>
+
+@if (_isLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_invoice is null)
+{
+    <MudAlert Severity="Severity.Error">
+        Nie znaleziono faktury.
+    </MudAlert>
+
+    <MudButton Href="/invoices"
+               Variant="Variant.Outlined"
+               Color="Color.Primary"
+               Class="mt-4">
+        Wróć do listy faktur
+    </MudButton>
+}
+else
+{
+    <MudText Typo="Typo.h4" Class="mb-4">
+        Faktura @_invoice.InvoiceNumber
+    </MudText>
+
+    <MudPaper Class="pa-4 mb-4">
+        <MudText Typo="Typo.h6" Class="mb-3">
+            Date podstawowe
+        </MudText>
+
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudText><strong>Numer faktury:</strong> @_invoice.InvoiceNumber</MudText>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudText><strong>Status:</strong> @_invoice.Status</MudText>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudText><strong>Dostawca:</strong> @_invoice.SupplierName</MudText>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudText><strong>Nip dostawcy:</strong> @_invoice.SupplierNip</MudText>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudText><strong>Oddział:</strong> @_invoice.BranchName</MudText>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudText><strong>Kod oddziału:</strong> @_invoice.BranchCode</MudText>
+            </MudItem>
+
+            <MudItem>
+                <MudText><strong>Kategoria kosztów:</strong> @_invoice.CostCategoryName</MudText>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4">
+        <MudText Typo="Typo.h6" Class="mb-3">
+            Daty
+        </MudText>
+
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudText><strong>Data wystawienia:</strong> @_invoice.IssueDate.ToString("dd.MM.yyyy")</MudText>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudText><strong>Data otrzymania:</strong> @_invoice.ReceivedDate.ToString("dd.MM.yyyy")</MudText>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudText><strong>Termin płatności:</strong> @_invoice.DueDate.ToString("dd.MM.yyyy")</MudText>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4">
+        <MudText Typo="Typo.h6" Class="mb-3">
+            Kwoty
+        </MudText>
+
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudText><strong>Netto:</strong> @_invoice.NetAmount.ToString("N2")</MudText>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudText><strong>VAT:</strong> @_invoice.VatAmount.ToString("N2")</MudText>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudText><strong>Brutto:</strong> @_invoice.GrossAmount.ToString("N2")</MudText>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4">
+        <MudText Typo="Typo.h6" Class="mb-3">
+            Opis
+        </MudText>
+
+        @if (string.IsNullOrWhiteSpace(_invoice.Description))
+        {
+            <MudText Color="Color.Secondary">
+                Brak opisu.
+            </MudText>
+        }
+        else
+        {
+            <MudText>
+                @_invoice.Description
+            </MudText>
+        }
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4">
+        <MudText Typo="Typo.h6" Class="mb-3">
+            Informacje systemowe
+        </MudText>
+
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudText><strong>Utworzona przez:</strong> @_invoice.CreatedByUserEmail</MudText>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudText><strong>Data utworzenia</strong> @_invoice.CreatedAt.ToString("dd.MM.yyyy")</MudText>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudText><strong>Ostatnia aktualizacja:</strong> @(_invoice.UpdatedAt?.ToString("dd.MM.yyyy HH:mm") ?? "Brak")</MudText>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudButton Href="/invoices"
+               Variant="Variant.Outlined"
+               Color="Color.Primary">
+        Wróć do listy faktur
+    </MudButton>
+
+
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private InvoiceDetailsDto? _invoice;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _invoice = await InvoiceService.GetInvoiceDetailsAsync(Id);
+        _isLoading = false;
+    }
+
+
+}
