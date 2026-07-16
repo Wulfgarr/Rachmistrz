@@ -34,6 +34,42 @@ namespace Rachmistrz.Web.Services
                 .ToListAsync();
         }
 
+        public async Task<InvoiceDetailsDto?> GetInvoiceDetailsAsync(int id)
+        {
+            return await _dbContext.Invoices
+                .AsNoTracking()
+                .Where(invoice => invoice.Id == id)
+                .Select(invoice => new InvoiceDetailsDto
+                {
+                    Id = invoice.Id,
+                    InvoiceNumber = invoice.InvoiceNumber,
+                    
+                    SupplierName = invoice.Supplier.Name,
+                    SupplierNip = invoice.Supplier.Nip,
+                    
+                    BranchName = invoice.Branch.Name,
+                    BranchCode = invoice.Branch.Code,
+
+                    CostCategoryName = invoice.CostCategory.Name,
+
+                    IssueDate = invoice.IssueDate,
+                    ReceivedDate = invoice.ReceivedDate,
+                    DueDate = invoice.DueDate,
+
+                    NetAmount = invoice.NetAmount,
+                    VatAmount = invoice.VatAmount,
+                    GrossAmount = invoice.GrossAmount,
+
+                    Status = invoice.Status,
+                    Description = invoice.Description,
+                    
+                    CreatedByUserEmail = invoice.CreatedByUser.Email ?? string.Empty,
+                    CreatedAt = invoice.CreatedAt,
+                    UpdatedAt = invoice.UpdatedAt
+                })
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<int> CreateInvoiceAsync(
             CreateInvoiceDto dto,
             string createdByUserId)
@@ -106,5 +142,7 @@ namespace Rachmistrz.Web.Services
 
             return invoice.Id;
         }
+
+
     }
 }

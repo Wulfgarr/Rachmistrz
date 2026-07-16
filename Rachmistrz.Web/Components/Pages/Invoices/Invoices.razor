@@ -41,6 +41,7 @@ else
             <MudTh>Kwota brutto</MudTh>
             <MudTh>Termin płatności</MudTh>
             <MudTh>Status</MudTh>
+            <MudTh>Akcje</MudTh>
         </HeaderContent>
 
         <RowTemplate>
@@ -57,6 +58,14 @@ else
                     @context.Status
                 </MudChip>
             </MudTd>
+            <MudTd DataLabel="Akcje">
+                <MudButton Href="@($"/invoices/{context.Id}")"
+                Variant="Variant.Outlined"
+                Color="Color.Primary"
+                Size="Size.Small">
+                    Szczegóły
+                </MudButton>
+                </MudTd>
         </RowTemplate>
     </MudTable>
 }
