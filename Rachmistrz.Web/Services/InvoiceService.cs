@@ -131,6 +131,7 @@ namespace Rachmistrz.Web.Services
                 NetAmount = dto.NetAmount.Value,
                 VatAmount = dto.VatAmount.Value,
                 GrossAmount = dto.GrossAmount.Value,
+                Description = dto.Description,
                 Status = InvoiceStatus.Draft,
                 CreatedByUserId = createdByUserId,
                 CreatedAt = DateTime.UtcNow
