@@ -1,0 +1,230 @@
+﻿@page "/invoices/create"
+@attribute [Authorize]
+
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Rachmistrz.Web.Data
+@using Rachmistrz.Web.DTOs
+@using Rachmistrz.Web.Models
+@using Rachmistrz.Web.Services
+
+@inject InvoiceService InvoiceService
+@inject SupplierService SupplierService
+@inject BranchService BranchService
+@inject CostCategoryService CostCategoryService
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Invoice</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Dodaj fakturę
+</MudText>
+
+@if (_isLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudPaper Class="pa-4" MaxWidth="900px">
+        <EditForm Model="_model" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.InvoiceNumber"
+                                  Label="Numer faktury"
+                                  Class="text-right"
+                                  For="@(() => _model.InvoiceNumber)"
+                                  Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int?"
+                               @bind-Value="_model.SupplierId"
+                               Label="Dostawca"
+                               Class="select-right"
+                               For="@(() => _model.SupplierId)"
+                               Required="true">
+                        @foreach (var supplier in _suppliers)
+                        {
+                            <MudSelectItem T="int?" Value="@supplier.Id">
+                                @supplier.Name
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int?"
+                               @bind-Value="_model.BranchId"
+                               Label="Oddział"
+                               Class="select-right"
+                               For="@(() => _model.BranchId)"
+                               Required="true">
+                        @foreach (var branch in _branches)
+                        {
+                            <MudSelectItem T="int?" Value="@branch.Id">
+                                @branch.Name
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int?"
+                               @bind-Value="_model.CostCategoryId"
+                               Label="Kategoria kosztów"
+                               Class="select-right"
+                               For="@(() => _model.CostCategoryId)"
+                               Required="true">
+                        @foreach (var costCategory in _costCategories)
+                        {
+                            <MudSelectItem T="int?" Value="@costCategory.Id">
+                                @costCategory.Name
+                            </MudSelectItem>
+                        }
+
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudDatePicker @bind-Date="_model.IssueDate"
+                                   Label="Data wystawienia"
+                                   Class="date-right"
+                                   DateFormat="dd.MM.yyy"
+                                   For="@(() => _model.IssueDate)"
+                                   Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudDatePicker @bind-Date="_model.ReceivedDate"
+                                   Label="Data otrzymania"
+                                   Class="date-right"
+                                   DateFormat="dd.MM.yyy"
+                                   For="@(() => _model.ReceivedDate)"
+                                   Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudDatePicker @bind-Date="_model.DueDate"
+                                   Label="Termin płatności"
+                                   Class="date-right"
+                                   DateFormat="dd.MM.yyy"
+                                   For="@(() => _model.DueDate)"
+                                   Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="decimal?"
+                                     @bind-Value="_model.NetAmount"
+                                     Adornment="Adornment.End"
+                                     AdornmentText="zł"
+                                     Format="N2"
+                                     Class="numeric-right"
+                                     Label="Kwota netto"
+                                     For="@(() => _model.NetAmount)"
+                                     Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="decimal?"
+                                     @bind-Value="_model.VatAmount"
+                                     Adornment="Adornment.End"
+                                     AdornmentText="zł"
+                                     Format="N2"
+                                     Class="numeric-right"
+                                     Label="Kwota VAT"
+                                     For="@(() => _model.VatAmount)"
+                                     Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudNumericField T="decimal?"
+                                     @bind-Value="_model.GrossAmount"
+                                     Adornment="Adornment.End"
+                                     AdornmentText="zł"
+                                     Format="N2"
+                                     Class="numeric-right"
+                                     Label="Kwota brutto"
+                                     For="@(() => _model.GrossAmount)"
+                                     Required="true" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_model.Description"
+                                  Label="Opis"
+                                  Lines="3"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => _model.Description)" />
+                </MudItem>
+
+                <MudItem xs="12" Class="d-flex gap-2">
+                    <MudButton ButtonType="ButtonType.Submit"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary">
+                        Zapisz fakturę
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Default"
+                               OnClick="Cancel">
+                        Anuluj
+                    </MudButton>
+
+                    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+                    {
+                        <MudAlert Severity="Severity.Error" Class="mb-4">
+                            @_errorMessage
+                        </MudAlert>
+                    }
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </MudPaper>
+}
+
+
+@code {
+    private CreateInvoiceDto _model = new();
+
+    private List<Supplier> _suppliers = [];
+    private List<Branch> _branches = [];
+    private List<CostCategory> _costCategories = [];
+
+    private bool _isLoading = true;
+    private string _errorMessage = String.Empty;
+    protected override async Task OnInitializedAsync()
+    {
+        _suppliers = await SupplierService.GetSuppliersAsync();
+        _branches = await BranchService.GetBranchesAsync();
+        _costCategories = await CostCategoryService.GetCostCategoriesAsync();
+
+        _isLoading = false;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authenticationState.User);
+
+        if (user is null)
+        {
+            _errorMessage = "Musisz być zalogowany, żeby dodać fakturę";
+            return;
+        }
+
+        var invoiceId = await InvoiceService.CreateInvoiceAsync(_model, user.Id);
+
+        NavigationManager.NavigateTo($"/invoices");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/invoices");
+    }
+}

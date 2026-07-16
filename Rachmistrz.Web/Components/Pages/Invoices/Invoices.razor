@@ -7,9 +7,18 @@
 
 <PageTitle>Invoices</PageTitle>
 
-<MudText Typo="Typo.h4" Class="mb-4">
-    Faktury
-</MudText>
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <MudText Typo="Typo.h4" Class="mb-4">
+        Faktury
+    </MudText>
+
+    <MudButton Href="/invoices/create"
+               Variant="Variant.Filled"
+               Color="Color.Primary">
+        Dodaj fakturę
+    </MudButton>
+</div>
 
 @if (_isLoading)
 {

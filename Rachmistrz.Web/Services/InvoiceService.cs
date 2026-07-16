@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Rachmistrz.Web.Data;
 using Rachmistrz.Web.DTOs;
+using Rachmistrz.Web.Enums;
+using Rachmistrz.Web.Models;
 
 namespace Rachmistrz.Web.Services
 {
@@ -30,6 +32,79 @@ namespace Rachmistrz.Web.Services
                     Status = invoice.Status
                 })
                 .ToListAsync();
+        }
+
+        public async Task<int> CreateInvoiceAsync(
+            CreateInvoiceDto dto,
+            string createdByUserId)
+        {
+            if (dto.SupplierId is null)
+            {
+                throw new InvalidOperationException("Supplier is required.");
+            }
+
+            if (dto.BranchId is null)
+            {
+                throw new InvalidOperationException("Branch is required.");
+            }
+
+            if (dto.CostCategoryId is null)
+            {
+                throw new InvalidOperationException("Cost category is required.");
+            }
+
+            if (dto.IssueDate is null)
+            {
+                throw new InvalidOperationException("Issue date is required.");
+            }
+
+            if (dto.ReceivedDate is null)
+            {
+                throw new InvalidOperationException("Received date is required.");
+            }
+
+            if (dto.DueDate is null)
+            {
+                throw new InvalidOperationException("Due date is required.");
+            }
+
+            if (dto.NetAmount is null)
+            {
+                throw new InvalidOperationException("Net amount is required.");
+            }
+
+            if (dto.VatAmount is null)
+            {
+                throw new InvalidOperationException("Vat amount is required.");
+            }
+
+            if (dto.GrossAmount is null)
+            {
+                throw new InvalidOperationException("Gross amount is required.");
+            }
+
+            var invoice = new Invoice
+            {
+                InvoiceNumber = dto.InvoiceNumber,
+                SupplierId = dto.SupplierId.Value,
+                BranchId = dto.BranchId.Value,
+                CostCategoryId = dto.CostCategoryId.Value,
+                IssueDate = dto.IssueDate.Value,
+                ReceivedDate = dto.ReceivedDate.Value,
+                DueDate = dto.DueDate.Value,
+                NetAmount = dto.NetAmount.Value,
+                VatAmount = dto.VatAmount.Value,
+                GrossAmount = dto.GrossAmount.Value,
+                Status = InvoiceStatus.Draft,
+                CreatedByUserId = createdByUserId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _dbContext.Invoices.Add(invoice);
+
+            await _dbContext.SaveChangesAsync();
+
+            return invoice.Id;
         }
     }
 }
