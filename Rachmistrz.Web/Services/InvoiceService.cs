@@ -144,6 +144,62 @@ namespace Rachmistrz.Web.Services
             return invoice.Id;
         }
 
+        public async Task<EditInvoiceDto?> GetInvoiceForEditAsync(int id)
+        {
+            return await _dbContext.Invoices
+                .AsNoTracking()
+                .Where(invoice => invoice.Id == id)
+                .Select(invoice => new EditInvoiceDto
+                {
+                    Id = invoice.Id,
+                    InvoiceNumber = invoice.InvoiceNumber,
+                    SupplierId = invoice.SupplierId,
+                    BranchId = invoice.BranchId,
+                    CostCategoryId = invoice.CostCategoryId,
+                    IssueDate = invoice.IssueDate,
+                    ReceivedDate = invoice.ReceivedDate,
+                    DueDate = invoice.DueDate,
+                    NetAmount = invoice.NetAmount,
+                    VatAmount = invoice.VatAmount,
+                    GrossAmount = invoice.GrossAmount,
+                    Description = invoice.Description
+                })
+                .FirstOrDefaultAsync();
+        }
 
+        public async Task<bool> UpdateInvoiceAsync(EditInvoiceDto dto)
+        {
+            var invoice = await _dbContext.Invoices
+                .FirstOrDefaultAsync(invoice => invoice.Id == dto.Id);
+
+            if (invoice is null)
+            {
+                return false;
+            }
+
+            if (dto.SupplierId is null) throw new InvalidOperationException("Supplier is required.");
+            if (dto.BranchId is null) throw new InvalidOperationException("Branch is required.");
+            if (dto.CostCategoryId is null) throw new InvalidOperationException("Cost category is required.");
+            if (dto.IssueDate is null) throw new InvalidOperationException("Issue date is required.");
+            if (dto.ReceivedDate is null) throw new InvalidOperationException("Received date is required.");
+            if (dto.DueDate is null) throw new InvalidOperationException("Due date is required.");
+
+            invoice.InvoiceNumber = dto.InvoiceNumber;
+            invoice.SupplierId = dto.SupplierId.Value;
+            invoice.BranchId = dto.BranchId.Value;
+            invoice.CostCategoryId = dto.CostCategoryId.Value;
+            invoice.IssueDate = dto.IssueDate.Value;
+            invoice.ReceivedDate = dto.ReceivedDate.Value;
+            invoice.DueDate = dto.DueDate.Value;
+            invoice.NetAmount = dto.NetAmount;
+            invoice.VatAmount = dto.VatAmount;
+            invoice.GrossAmount = dto.GrossAmount;
+            invoice.Description = dto.Description;
+            invoice.UpdatedAt = DateTime.UtcNow;
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
     }
 }
