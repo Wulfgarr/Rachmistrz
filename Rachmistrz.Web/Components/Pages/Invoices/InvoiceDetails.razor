@@ -27,9 +27,18 @@ else if (_invoice is null)
 }
 else
 {
-    <MudText Typo="Typo.h4" Class="mb-4">
-        Faktura @_invoice.InvoiceNumber
-    </MudText>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <MudText Typo="Typo.h4" Class="mb-4">
+            Faktura @_invoice.InvoiceNumber
+        </MudText>
+
+        <MudButton Href="@($"/invoices/{_invoice.Id}/edit")"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary">
+            Edytuj fakturę
+        </MudButton>
+    </div>
 
     <MudPaper Class="pa-4 mb-4">
         <MudText Typo="Typo.h6" Class="mb-3">
