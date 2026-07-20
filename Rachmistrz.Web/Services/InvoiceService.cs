@@ -201,5 +201,31 @@ namespace Rachmistrz.Web.Services
 
             return true;
         }
+
+        private static bool IsStatusTransitionAllowed(InvoiceStatus currentStatus, InvoiceStatus newStatus)
+        {
+            return currentStatus switch
+            {
+                InvoiceStatus.Draft => newStatus is InvoiceStatus.Submitted or InvoiceStatus.Cancelled,
+
+                InvoiceStatus.Submitted => newStatus is InvoiceStatus.UnderReview or InvoiceStatus.Cancelled,
+
+                InvoiceStatus.UnderReview => newStatus is InvoiceStatus.UnderReview or InvoiceStatus.Cancelled
+                    or InvoiceStatus.Rejected
+                    or InvoiceStatus.Cancelled,
+
+                InvoiceStatus.Approved => newStatus is InvoiceStatus.Booked or InvoiceStatus.Cancelled,
+
+                InvoiceStatus.Booked => newStatus is InvoiceStatus.Paid or InvoiceStatus.Cancelled,
+
+                InvoiceStatus.Rejected => newStatus is InvoiceStatus.Draft or InvoiceStatus.Cancelled,
+
+                InvoiceStatus.Paid => false,
+
+                InvoiceStatus.Cancelled => false,
+
+                _ => false
+            };
+        }
     }
 }
