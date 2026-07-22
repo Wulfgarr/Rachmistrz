@@ -43,10 +43,10 @@ namespace Rachmistrz.Web.Services
                 {
                     Id = invoice.Id,
                     InvoiceNumber = invoice.InvoiceNumber,
-                    
+
                     SupplierName = invoice.Supplier.Name,
                     SupplierNip = invoice.Supplier.Nip,
-                    
+
                     BranchName = invoice.Branch.Name,
                     BranchCode = invoice.Branch.Code,
 
@@ -62,7 +62,7 @@ namespace Rachmistrz.Web.Services
 
                     Status = invoice.Status,
                     Description = invoice.Description,
-                    
+
                     CreatedByUserEmail = invoice.CreatedByUser.Email ?? string.Empty,
                     CreatedAt = invoice.CreatedAt,
                     UpdatedAt = invoice.UpdatedAt
@@ -210,7 +210,7 @@ namespace Rachmistrz.Web.Services
 
                 InvoiceStatus.Submitted => newStatus is InvoiceStatus.UnderReview or InvoiceStatus.Cancelled,
 
-                InvoiceStatus.UnderReview => newStatus is InvoiceStatus.UnderReview or InvoiceStatus.Cancelled
+                InvoiceStatus.UnderReview => newStatus is InvoiceStatus.Approved
                     or InvoiceStatus.Rejected
                     or InvoiceStatus.Cancelled,
 
@@ -226,6 +226,49 @@ namespace Rachmistrz.Web.Services
 
                 _ => false
             };
+        }
+
+        public async Task<bool> ChangeStatusAsync(
+            int invoiceId,
+            InvoiceStatus newStatus,
+            string userId,
+            string? description = null)
+        {
+            var invoice = await _dbContext.Invoices
+                .FirstOrDefaultAsync(invoice => invoice.Id == invoiceId);
+
+            if (invoice is null)
+            {
+                return false;
+            }
+
+            var oldStatus = invoice.Status;
+
+            if (!IsStatusTransitionAllowed(oldStatus, newStatus))
+            {
+                throw new InvalidOperationException(
+                    $"Nie można zmienić statusu z {oldStatus} na {newStatus}.");
+            }
+
+            invoice.Status = newStatus;
+            invoice.UpdatedAt = DateTime.UtcNow;
+
+            var auditLog = new InvoiceAuditLog
+            {
+                InvoiceId = invoice.Id,
+                UserId = userId,
+                Action = "StatusChanged",
+                OldStatus = oldStatus,
+                NewStatus = newStatus,
+                Description = description ?? $"Zmieniono status z {oldStatus} na {newStatus}.",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _dbContext.InvoiceAuditLogs.Add(auditLog);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
         }
     }
 }
