@@ -1,10 +1,17 @@
 ﻿@page "/invoices/{Id:int}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 @using Rachmistrz.Web.DTOs
 @using Rachmistrz.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Rachmistrz.Web.Data
+@using Rachmistrz.Web.Enums
 
 @inject InvoiceService InvoiceService
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
 
 <h3>Szczegóły faktury</h3>
 
@@ -40,9 +47,16 @@ else
         </MudButton>
     </div>
 
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-4">
+            @_errorMessage
+        </MudAlert>
+    }
+
     <MudPaper Class="pa-4 mb-4">
         <MudText Typo="Typo.h6" Class="mb-3">
-            Date podstawowe
+            Dane podstawowe
         </MudText>
 
         <MudGrid>
@@ -155,6 +169,27 @@ else
         </MudGrid>
     </MudPaper>
 
+    @if (GetAvailableStatusActions().Count > 0)
+    {
+        <MudPaper Class="pa-4 mb-4">
+            <MudText Typo="Typo.h6" Class="mb-3">
+                Akcje statusu
+            </MudText>
+
+            <MudStack Row="true" Spacing="2">
+                @foreach (var action in GetAvailableStatusActions())
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="@action.Color"
+                               Disabled="_isChangingStatus"
+                               OnClick="@(() => ChangeStatusAsync(action.NewStatus, action.Description))">
+                        @action.Label
+                    </MudButton>
+                }
+            </MudStack>
+        </MudPaper>
+    }
+
     <MudButton Href="/invoices"
                Variant="Variant.Outlined"
                Color="Color.Primary">
@@ -170,6 +205,151 @@ else
 
     private InvoiceDetailsDto? _invoice;
     private bool _isLoading = true;
+    private string _errorMessage = string.Empty;
+    private bool _isChangingStatus;
+
+    private sealed record StatusAction(
+    InvoiceStatus NewStatus,
+    string Label,
+    string Description,
+    Color Color);
+
+    private List<StatusAction> GetAvailableStatusActions()
+    {
+        if (_invoice is null)
+        {
+            return [];
+        }
+
+        return _invoice.Status switch
+        {
+            InvoiceStatus.Draft =>
+            [
+                new StatusAction(
+                InvoiceStatus.Submitted,
+                "Wyślij do obsługi",
+                "Faktura została wysłana do obsługi.",
+                Color.Primary),
+
+            new StatusAction(
+                InvoiceStatus.Cancelled,
+                "Anuluj fakturę",
+                "Faktura została anulowana.",
+                Color.Error)
+            ],
+
+            InvoiceStatus.Submitted =>
+            [
+                new StatusAction(
+                InvoiceStatus.UnderReview,
+                "Przekaż do weryfikacji",
+                "Faktura została przekazana do weryfikacji.",
+                Color.Primary),
+
+            new StatusAction(
+                InvoiceStatus.Cancelled,
+                "Anuluj fakturę",
+                "Faktura została anulowana.",
+                Color.Error)
+            ],
+
+            InvoiceStatus.UnderReview =>
+            [
+                new StatusAction(
+                InvoiceStatus.Approved,
+                "Zatwierdź",
+                "Faktura została zatwierdzona.",
+                Color.Success),
+
+            new StatusAction(
+                InvoiceStatus.Rejected,
+                "Odrzuć",
+                "Faktura została odrzucona.",
+                Color.Error)
+            ],
+
+            InvoiceStatus.Approved =>
+            [
+                new StatusAction(
+                InvoiceStatus.Booked,
+                "Oznacz jako zaksięgowaną",
+                "Faktura została oznaczona jako zaksięgowana.",
+                Color.Primary)
+            ],
+
+            InvoiceStatus.Booked =>
+            [
+                new StatusAction(
+                InvoiceStatus.Paid,
+                "Oznacz jako zapłaconą",
+                "Faktura została oznaczona jako zapłacona.",
+                Color.Success)
+            ],
+
+            InvoiceStatus.Rejected =>
+            [
+                new StatusAction(
+                InvoiceStatus.Draft,
+                "Przywróć do roboczych",
+                "Faktura została przywrócona do statusu roboczego.",
+                Color.Warning),
+
+            new StatusAction(
+                InvoiceStatus.Cancelled,
+                "Anuluj fakturę",
+                "Faktura została anulowana.",
+                Color.Error)
+            ],
+
+            _ => []
+        };
+    }
+
+    private async Task ChangeStatusAsync(InvoiceStatus newStatus, string description)
+    {
+        if (_invoice is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _isChangingStatus = true;
+            _errorMessage = string.Empty;
+
+            var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = await UserManager.GetUserAsync(authenticationState.User);
+
+            if (user is null)
+            {
+                _errorMessage = "Musisz być zalogowany, aby zmienić status faktury.";
+                return;
+            }
+
+            var changed = await InvoiceService.ChangeStatusAsync(
+                _invoice.Id,
+                newStatus,
+                user.Id,
+                description);
+
+            if (!changed)
+            {
+                _errorMessage = "Nie znaleziono faktury.";
+                return;
+            }
+
+            // Po zmianie statusu pobieramy świeże dane, żeby UI pokazał aktualny status i nowe dostępne akcje.
+            _invoice = await InvoiceService.GetInvoiceDetailsAsync(_invoice.Id);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Nie udało się zmienić statusu faktury: {ex.Message}";
+        }
+        finally
+        {
+            _isChangingStatus = false;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
