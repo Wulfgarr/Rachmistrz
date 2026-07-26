@@ -270,5 +270,24 @@ namespace Rachmistrz.Web.Services
 
             return true;
         }
+
+        public async Task<List<InvoiceAuditLogDto>> GetInvoiceAuditLogsAsync(int invoiceId)
+        {
+            return await _dbContext.InvoiceAuditLogs
+                .AsNoTracking()
+                .Where(log => log.InvoiceId == invoiceId)
+                .OrderByDescending(log => log.CreatedAt)
+                .Select(log => new InvoiceAuditLogDto
+                {
+                    Id = log.Id,
+                    UserEmail = log.User.Email ?? string.Empty,
+                    Action = log.Action,
+                    OldStatus = log.OldStatus,
+                    NewStatus = log.NewStatus,
+                    Description = log.Description,
+                    CreatedAt = log.CreatedAt
+                })
+                .ToListAsync();
+        }
     }
 }

@@ -169,6 +169,60 @@ else
         </MudGrid>
     </MudPaper>
 
+    <MudPaper Class="pa-4 mb-4">
+        <MudText Typo="Typo.h6" Class="mb-3">
+            Historia zmian
+        </MudText>
+
+        @if (_auditLogs.Count == 0)
+        {
+            <MudText Color="Color.Secondary">
+                Brak historii zmian.
+            </MudText>
+        }
+        else
+        {
+            <MudTable Items="_auditLogs" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Data</MudTh>
+                    <MudTh>Użytkownik</MudTh>
+                    <MudTh>Akcja</MudTh>
+                    <MudTh>Zmiana statusu</MudTh>
+                    <MudTh>Opis</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd DataLabel="Data">
+                        @context.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                    </MudTd>
+
+                    <MudTd DataLabel="Użytkownik">
+                        @context.UserEmail
+                    </MudTd>
+
+                    <MudTd DataLabel="Akcja">
+                        @context.Action
+                    </MudTd>
+
+                    <MudTd DataLabel="Zmiana statusu">
+                        @if (context.OldStatus is not null && context.NewStatus is not null)
+                        {
+                            <span>@context.OldStatus &rarr; @context.NewStatus</span>
+                        }
+                        else
+                        {
+                            <span>-</span>
+                        }
+                    </MudTd>
+
+                    <MudTd DataLabel="Opis">
+                        @context.Description
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudPaper>
+
     @if (GetAvailableStatusActions().Count > 0)
     {
         <MudPaper Class="pa-4 mb-4">
@@ -207,6 +261,7 @@ else
     private bool _isLoading = true;
     private string _errorMessage = string.Empty;
     private bool _isChangingStatus;
+    private List<InvoiceAuditLogDto> _auditLogs = [];
 
     private sealed record StatusAction(
     InvoiceStatus NewStatus,
@@ -226,10 +281,10 @@ else
             InvoiceStatus.Draft =>
             [
                 new StatusAction(
-                InvoiceStatus.Submitted,
-                "Wyślij do obsługi",
-                "Faktura została wysłana do obsługi.",
-                Color.Primary),
+    InvoiceStatus.Submitted,
+    "Wyślij do obsługi",
+    "Faktura została wysłana do obsługi.",
+    Color.Primary),
 
             new StatusAction(
                 InvoiceStatus.Cancelled,
@@ -241,10 +296,10 @@ else
             InvoiceStatus.Submitted =>
             [
                 new StatusAction(
-                InvoiceStatus.UnderReview,
-                "Przekaż do weryfikacji",
-                "Faktura została przekazana do weryfikacji.",
-                Color.Primary),
+    InvoiceStatus.UnderReview,
+    "Przekaż do weryfikacji",
+    "Faktura została przekazana do weryfikacji.",
+    Color.Primary),
 
             new StatusAction(
                 InvoiceStatus.Cancelled,
@@ -256,10 +311,10 @@ else
             InvoiceStatus.UnderReview =>
             [
                 new StatusAction(
-                InvoiceStatus.Approved,
-                "Zatwierdź",
-                "Faktura została zatwierdzona.",
-                Color.Success),
+    InvoiceStatus.Approved,
+    "Zatwierdź",
+    "Faktura została zatwierdzona.",
+    Color.Success),
 
             new StatusAction(
                 InvoiceStatus.Rejected,
@@ -271,28 +326,28 @@ else
             InvoiceStatus.Approved =>
             [
                 new StatusAction(
-                InvoiceStatus.Booked,
-                "Oznacz jako zaksięgowaną",
-                "Faktura została oznaczona jako zaksięgowana.",
-                Color.Primary)
+    InvoiceStatus.Booked,
+    "Oznacz jako zaksięgowaną",
+    "Faktura została oznaczona jako zaksięgowana.",
+    Color.Primary)
             ],
 
             InvoiceStatus.Booked =>
             [
                 new StatusAction(
-                InvoiceStatus.Paid,
-                "Oznacz jako zapłaconą",
-                "Faktura została oznaczona jako zapłacona.",
-                Color.Success)
+    InvoiceStatus.Paid,
+    "Oznacz jako zapłaconą",
+    "Faktura została oznaczona jako zapłacona.",
+    Color.Success)
             ],
 
             InvoiceStatus.Rejected =>
             [
                 new StatusAction(
-                InvoiceStatus.Draft,
-                "Przywróć do roboczych",
-                "Faktura została przywrócona do statusu roboczego.",
-                Color.Warning),
+    InvoiceStatus.Draft,
+    "Przywróć do roboczych",
+    "Faktura została przywrócona do statusu roboczego.",
+    Color.Warning),
 
             new StatusAction(
                 InvoiceStatus.Cancelled,
@@ -338,8 +393,9 @@ else
                 return;
             }
 
-            // Po zmianie statusu pobieramy świeże dane, żeby UI pokazał aktualny status i nowe dostępne akcje.
+            // Po zmianie statusu pobieramy świeże dane, żeby UI pokazał aktualny status i nowe dostępne akcje, status oraz historię zmian.
             _invoice = await InvoiceService.GetInvoiceDetailsAsync(_invoice.Id);
+            _auditLogs = await InvoiceService.GetInvoiceAuditLogsAsync(_invoice.Id);
         }
         catch (Exception ex)
         {
@@ -354,6 +410,12 @@ else
     protected override async Task OnInitializedAsync()
     {
         _invoice = await InvoiceService.GetInvoiceDetailsAsync(Id);
+
+        if (_invoice is not null)
+        {
+            _auditLogs = await InvoiceService.GetInvoiceAuditLogsAsync(Id);
+        }
+
         _isLoading = false;
     }
 
