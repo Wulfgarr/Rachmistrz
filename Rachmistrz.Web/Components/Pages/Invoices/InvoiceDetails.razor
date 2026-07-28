@@ -151,6 +151,40 @@ else
 
     <MudPaper Class="pa-4 mb-4">
         <MudText Typo="Typo.h6" Class="mb-3">
+            Komentarze
+        </MudText>
+
+        @if (_comments.Count == 0)
+        {
+            <MudText Color="Color.Secondary">
+                Brak komentarzy.
+            </MudText>
+        }
+        else
+        {
+            <MudStack Spacing="2">
+                @foreach (var comment in _comments)
+                {
+                    <MudPaper Class="pa-3" Outlined="true">
+                        <MudText Typo="Typo.subtitle2">
+                            @comment.UserEmail
+                        </MudText>
+
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                        </MudText>
+
+                        <MudText Class="mt-2">
+                            @comment.Content
+                        </MudText>
+                    </MudPaper>
+                }
+            </MudStack>
+        }
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4">
+        <MudText Typo="Typo.h6" Class="mb-3">
             Informacje systemowe
         </MudText>
 
@@ -262,6 +296,7 @@ else
     private string _errorMessage = string.Empty;
     private bool _isChangingStatus;
     private List<InvoiceAuditLogDto> _auditLogs = [];
+    private List<InvoiceCommentDto> _comments = [];
 
     private sealed record StatusAction(
     InvoiceStatus NewStatus,
@@ -414,6 +449,7 @@ else
         if (_invoice is not null)
         {
             _auditLogs = await InvoiceService.GetInvoiceAuditLogsAsync(Id);
+            _comments = await InvoiceService.GetInvoiceCommentsAsync(Id);
         }
 
         _isLoading = false;
