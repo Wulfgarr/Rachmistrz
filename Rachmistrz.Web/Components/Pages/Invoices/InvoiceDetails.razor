@@ -154,6 +154,27 @@ else
             Komentarze
         </MudText>
 
+        <MudTextField @bind-Value="_newCommentContent"
+                      Label="Dodaj komentarz"
+                      Lines="3"
+                      Class="mb-1" />
+
+        @if (!string.IsNullOrWhiteSpace(_commentErrorMessage))
+        {
+            <MudText Color="Color.Error" Typo="Typo.caption" Class="mb-2">
+                @_commentErrorMessage
+            </MudText>
+        }
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="_isAddingComment"
+                   OnClick="AddCommentAsync">
+            Dodaj komentarz
+        </MudButton>
+
+        <MudDivider Class="my-4" />
+
         @if (_comments.Count == 0)
         {
             <MudText Color="Color.Secondary">
@@ -293,8 +314,13 @@ else
 
     private InvoiceDetailsDto? _invoice;
     private bool _isLoading = true;
-    private string _errorMessage = string.Empty;
+    private bool _isAddingComment;
     private bool _isChangingStatus;
+
+    private string _errorMessage = string.Empty;
+    private string _commentErrorMessage = string.Empty;
+    private string _newCommentContent = string.Empty;
+
     private List<InvoiceAuditLogDto> _auditLogs = [];
     private List<InvoiceCommentDto> _comments = [];
 
@@ -455,5 +481,58 @@ else
         _isLoading = false;
     }
 
+    private async Task AddCommentAsync()
+    {
+        if (_invoice is null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_newCommentContent))
+        {
+            _errorMessage = "Komentarz nie może być pusty.";
+            return;
+        }
+
+        try
+        {
+            _isAddingComment = true;
+            _errorMessage = string.Empty;
+            _commentErrorMessage = string.Empty;
+
+            var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = await UserManager.GetUserAsync(authenticationState.User);
+
+            if (user is null)
+            {
+                _commentErrorMessage = "Musisz być zalogowany, aby dodać komentarz.";
+                return;
+            }
+
+            var added = await InvoiceService.AddInvoiceCommentAsync(
+                _invoice.Id,
+                user.Id,
+                _newCommentContent);
+
+            if (!added)
+            {
+                _commentErrorMessage = "Nie znaleziono faktury.";
+                return;
+            }
+
+            _newCommentContent = string.Empty;
+
+            // Po dodaniu komentarza pobieramy świeżą listę komentarzy.
+            _comments = await InvoiceService.GetInvoiceCommentsAsync(_invoice.Id);
+        }
+        catch (Exception ex)
+        {
+            _commentErrorMessage = $"Nie udało się dodać komentarza: {ex.Message}";
+        }
+        finally
+        {
+            _isAddingComment = false;
+        }
+    }
 
 }
