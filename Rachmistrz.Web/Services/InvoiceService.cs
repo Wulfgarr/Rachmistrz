@@ -289,5 +289,51 @@ namespace Rachmistrz.Web.Services
                 })
                 .ToListAsync();
         }
+
+        public async Task<List<InvoiceCommentDto>> GetInvoiceCommentsAsync(int invoiceId)
+        {
+            return await _dbContext.InvoiceComments
+                .AsNoTracking()
+                .Where(comment => comment.InvoiceId == invoiceId)
+                .OrderBy(comment => comment.CreatedAt)
+                .Select(comment => new InvoiceCommentDto
+                {
+                    Id = comment.Id,
+                    UserEmail = comment.User.Email ?? string.Empty,
+                    Content = comment.Content,
+                    CreatedAt = comment.CreatedAt
+                })
+                .ToListAsync();
+        }
+
+        public async Task<bool> AddInvoiceCommentAsync(int invoiceId, string userId, string content)
+        {
+            var invoiceExists = await _dbContext.Invoices
+                .AnyAsync(invoice => invoice.Id == invoiceId);
+
+            if (!invoiceExists)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                throw new InvalidOperationException("Komentarz nie może być pusty.");
+            }
+
+            var invoiceComment = new InvoiceComment
+            {
+                InvoiceId = invoiceId,
+                UserId = userId,
+                Content = content.Trim(),
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _dbContext.InvoiceComments.Add(invoiceComment);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
     }
 }
