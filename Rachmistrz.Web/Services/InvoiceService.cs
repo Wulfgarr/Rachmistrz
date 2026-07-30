@@ -47,6 +47,7 @@ namespace Rachmistrz.Web.Services
                     SupplierName = invoice.Supplier.Name,
                     SupplierNip = invoice.Supplier.Nip,
 
+                    BranchId = invoice.BranchId,
                     BranchName = invoice.Branch.Name,
                     BranchCode = invoice.Branch.Code,
 
@@ -63,6 +64,7 @@ namespace Rachmistrz.Web.Services
                     Status = invoice.Status,
                     Description = invoice.Description,
 
+                    CreatedByUserId = invoice.CreatedByUserId,
                     CreatedByUserEmail = invoice.CreatedByUser.Email ?? string.Empty,
                     CreatedAt = invoice.CreatedAt,
                     UpdatedAt = invoice.UpdatedAt
