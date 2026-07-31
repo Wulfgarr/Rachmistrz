@@ -3,6 +3,7 @@ using Rachmistrz.Web.Data;
 using Rachmistrz.Web.DTOs;
 using Rachmistrz.Web.Enums;
 using Rachmistrz.Web.Models;
+using Rachmistrz.Web.Constants;
 
 namespace Rachmistrz.Web.Services
 {
@@ -15,15 +16,39 @@ namespace Rachmistrz.Web.Services
             _dbContext = dbContext;
         }
 
-        public async Task<List<InvoiceListItemDto>> GetInvoicesAsync()
+        public async Task<List<InvoiceListItemDto>> GetInvoicesAsync(
+            string userId,
+            int? userBranchId,
+            IEnumerable<string> roles)
         {
-            return await _dbContext.Invoices
+
+            var query = _dbContext.Invoices
                 .AsNoTracking()
+                .AsQueryable();
+
+            if (roles.Contains(RoleNames.Admin) || roles.Contains(RoleNames.Accounting))
+            {
+                // Admin and accounting can see all invoices.
+            }
+            else if (roles.Contains(RoleNames.BranchManager) && userBranchId is not null)
+            {
+                query = query.Where(invoice => invoice.BranchId == userBranchId.Value);
+            }
+            else if (roles.Contains(RoleNames.Employee))
+            {
+                query = query.Where(invoice => invoice.CreatedByUserId == userId);
+            }
+            else
+            {
+                query = query.Where(invoice => false);
+            }
+
+            return await query
                 .OrderByDescending(invoice => invoice.CreatedAt)
                 .Select(invoice => new InvoiceListItemDto
                 {
                     Id = invoice.Id,
-                    InvoiceNumber = invoice.Supplier.Name,
+                    InvoiceNumber = invoice.InvoiceNumber,
                     SupplierName = invoice.Supplier.Name,
                     BranchName = invoice.Branch.Name,
                     CostCategoryName = invoice.CostCategory.Name,

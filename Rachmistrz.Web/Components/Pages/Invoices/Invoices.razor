@@ -1,9 +1,16 @@
 ﻿@page "/invoices"
 
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Rachmistrz.Web.Data
 @using Rachmistrz.Web.DTOs
 @using Rachmistrz.Web.Services
 
 @inject InvoiceService InvoiceService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
 
 <PageTitle>Invoices</PageTitle>
 
@@ -77,7 +84,23 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _invoices = await InvoiceService.GetInvoicesAsync();
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authenticationState.User);
+
+        if (user is null)
+        {
+            _invoices = [];
+            _isLoading = false;
+            return;
+        }
+
+        var roles = await UserManager.GetRolesAsync(user);
+
+        _invoices = await InvoiceService.GetInvoicesAsync(
+            user.Id,
+            user.BranchId,
+            roles);
+
         _isLoading = false;
     }
 
