@@ -2,16 +2,18 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 @using Rachmistrz.Web.DTOs
-@using Rachmistrz.Web.Services
-@using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Identity
 @using Rachmistrz.Web.Data
 @using Rachmistrz.Web.Enums
+@using Rachmistrz.Web.Services
+@using Rachmistrz.Web.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
 
 @inject InvoiceService InvoiceService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
+@inject InvoicePermissionService InvoicePermissionService
 
 <h3>Szczegóły faktury</h3>
 
@@ -40,11 +42,14 @@ else
             Faktura @_invoice.InvoiceNumber
         </MudText>
 
-        <MudButton Href="@($"/invoices/{_invoice.Id}/edit")"
-                   Variant="Variant.Filled"
-                   Color="Color.Primary">
-            Edytuj fakturę
-        </MudButton>
+        @if (InvoicePermissionService.CanEditInvoice(_currentUserRoles))
+        {
+            <MudButton Href="@($"/invoices/{_invoice.Id}/edit")"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary">
+                Edytuj fakturę
+            </MudButton>
+        }
     </div>
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
@@ -154,26 +159,33 @@ else
             Komentarze
         </MudText>
 
-        <MudTextField @bind-Value="_newCommentContent"
-                      Label="Dodaj komentarz"
-                      Lines="3"
-                      Class="mb-1" />
-
-        @if (!string.IsNullOrWhiteSpace(_commentErrorMessage))
+        @if (InvoicePermissionService.CanCommentInvoice(
+                _invoice,
+                _currentUserId,
+                _currentUserBranchId,
+                _currentUserRoles))
         {
-            <MudText Color="Color.Error" Typo="Typo.caption" Class="mb-2">
-                @_commentErrorMessage
-            </MudText>
+            <MudTextField @bind-Value="_newCommentContent"
+                          Label="Dodaj komentarz"
+                          Lines="3"
+                          Class="mb-1" />
+
+            @if (!string.IsNullOrWhiteSpace(_commentErrorMessage))
+            {
+                <MudText Color="Color.Error" Typo="Typo.caption" Class="mb-2">
+                    @_commentErrorMessage
+                </MudText>
+            }
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Disabled="_isAddingComment"
+                       OnClick="AddCommentAsync">
+                Dodaj komentarz
+            </MudButton>
+
+            <MudDivider Class="my-4" />
         }
-
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   Disabled="_isAddingComment"
-                   OnClick="AddCommentAsync">
-            Dodaj komentarz
-        </MudButton>
-
-        <MudDivider Class="my-4" />
 
         @if (_comments.Count == 0)
         {
@@ -321,6 +333,10 @@ else
     private string _commentErrorMessage = string.Empty;
     private string _newCommentContent = string.Empty;
 
+    private string _currentUserId = string.Empty;
+    private int? _currentUserBranchId;
+    private IList<string> _currentUserRoles = [];
+
     private List<InvoiceAuditLogDto> _auditLogs = [];
     private List<InvoiceCommentDto> _comments = [];
 
@@ -337,15 +353,15 @@ else
             return [];
         }
 
-        return _invoice.Status switch
+        List<StatusAction> actions = _invoice.Status switch
         {
             InvoiceStatus.Draft =>
             [
                 new StatusAction(
-    InvoiceStatus.Submitted,
-    "Wyślij do obsługi",
-    "Faktura została wysłana do obsługi.",
-    Color.Primary),
+                InvoiceStatus.Submitted,
+                "Wyślij do obsługi",
+                "Faktura została wysłana do obsługi.",
+                Color.Primary),
 
             new StatusAction(
                 InvoiceStatus.Cancelled,
@@ -357,10 +373,10 @@ else
             InvoiceStatus.Submitted =>
             [
                 new StatusAction(
-    InvoiceStatus.UnderReview,
-    "Przekaż do weryfikacji",
-    "Faktura została przekazana do weryfikacji.",
-    Color.Primary),
+                InvoiceStatus.UnderReview,
+                "Przekaż do weryfikacji",
+                "Faktura została przekazana do weryfikacji.",
+                Color.Primary),
 
             new StatusAction(
                 InvoiceStatus.Cancelled,
@@ -372,10 +388,10 @@ else
             InvoiceStatus.UnderReview =>
             [
                 new StatusAction(
-    InvoiceStatus.Approved,
-    "Zatwierdź",
-    "Faktura została zatwierdzona.",
-    Color.Success),
+                InvoiceStatus.Approved,
+                "Zatwierdź",
+                "Faktura została zatwierdzona.",
+                Color.Success),
 
             new StatusAction(
                 InvoiceStatus.Rejected,
@@ -387,28 +403,28 @@ else
             InvoiceStatus.Approved =>
             [
                 new StatusAction(
-    InvoiceStatus.Booked,
-    "Oznacz jako zaksięgowaną",
-    "Faktura została oznaczona jako zaksięgowana.",
-    Color.Primary)
+                InvoiceStatus.Booked,
+                "Oznacz jako zaksięgowaną",
+                "Faktura została oznaczona jako zaksięgowana.",
+                Color.Primary)
             ],
 
             InvoiceStatus.Booked =>
             [
                 new StatusAction(
-    InvoiceStatus.Paid,
-    "Oznacz jako zapłaconą",
-    "Faktura została oznaczona jako zapłacona.",
-    Color.Success)
+                InvoiceStatus.Paid,
+                "Oznacz jako zapłaconą",
+                "Faktura została oznaczona jako zapłacona.",
+                Color.Success)
             ],
 
             InvoiceStatus.Rejected =>
             [
                 new StatusAction(
-    InvoiceStatus.Draft,
-    "Przywróć do roboczych",
-    "Faktura została przywrócona do statusu roboczego.",
-    Color.Warning),
+                InvoiceStatus.Draft,
+                "Przywróć do roboczych",
+                "Faktura została przywrócona do statusu roboczego.",
+                Color.Warning),
 
             new StatusAction(
                 InvoiceStatus.Cancelled,
@@ -419,6 +435,15 @@ else
 
             _ => []
         };
+
+        return actions
+            .Where(action => InvoicePermissionService.CanChangeStatus(
+                _invoice,
+                action.NewStatus,
+                _currentUserId,
+                _currentUserBranchId,
+                _currentUserRoles))
+            .ToList();
     }
 
     private async Task ChangeStatusAsync(InvoiceStatus newStatus, string description)
@@ -470,10 +495,38 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authenticationState.User);
+
+        if (user is null)
+        {
+            _errorMessage = "Musisz być zalogowany, aby zobaczyć szczegóły faktury.";
+            _isLoading = false;
+            return;
+        }
+
+        _currentUserId = user.Id;
+        _currentUserBranchId = user.BranchId;
+        _currentUserRoles = await UserManager.GetRolesAsync(user);
+
         _invoice = await InvoiceService.GetInvoiceDetailsAsync(Id);
 
         if (_invoice is not null)
         {
+            var canView = InvoicePermissionService.CanViewInvoice(
+                _invoice,
+                _currentUserId,
+                _currentUserBranchId,
+                _currentUserRoles);
+
+            if (!canView)
+            {
+                _invoice = null;
+                _errorMessage = "Nie masz uprawnień do wyświetlenia tej faktury.";
+                _isLoading = false;
+                return;
+            }
+
             _auditLogs = await InvoiceService.GetInvoiceAuditLogsAsync(Id);
             _comments = await InvoiceService.GetInvoiceCommentsAsync(Id);
         }

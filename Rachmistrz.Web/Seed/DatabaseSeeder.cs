@@ -100,7 +100,93 @@ namespace Rachmistrz.Web.Seed
             await SeedBranchesAsync(dbContext);
             await SeedSuppliersAsync(dbContext);
             await SeedCostCategoriesAsync(dbContext);
+            await SeedTestUserAsync(dbContext, userManager);
             await SeedInvoiceAsync(dbContext, userManager);
+        }
+
+        private static async Task SeedTestUserAsync(
+            ApplicationDbContext dbContext,
+            UserManager<ApplicationUser> userManager)
+        {
+            var krakowBranch = await dbContext.Branches
+                .SingleAsync(branch => branch.Code == "KRK-01");
+
+            await SeedUserAsync(
+                userManager,
+                email: "accounting@rachmistrz.local",
+                password: "Test123!",
+                firstName: "Accounting",
+                lastName: "User",
+                branchId: null,
+                roleName: RoleNames.Accounting);
+
+            await SeedUserAsync(
+                userManager,
+                email: "manager.krakow@rachmistrz.local",
+                password: "Test123!",
+                firstName: "Branch",
+                lastName: "Manager",
+                branchId: krakowBranch.Id,
+                roleName: RoleNames.BranchManager);
+
+            await SeedUserAsync(
+                userManager,
+                email: "employee.krakow@rachmistrz.local",
+                password: "Test123!",
+                firstName: "Employee",
+                lastName: "Krakow",
+                branchId: krakowBranch.Id,
+                roleName: RoleNames.Employee);
+        }
+
+        private static async Task SeedUserAsync(
+            UserManager<ApplicationUser> userManager,
+            string email,
+            string password,
+            string firstName,
+            string lastName,
+            int? branchId,
+            string roleName)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+
+            if (user is null)
+            {
+                user = new ApplicationUser
+                {
+                    UserName = email,
+                    Email = email,
+                    EmailConfirmed = true,
+                    FirstName = firstName,
+                    LastName = lastName,
+                    BranchId = branchId
+                };
+
+                var createResult = await userManager.CreateAsync(user, password);
+
+                if (!createResult.Succeeded)
+                {
+                    throw new InvalidOperationException($"Failed to create test user: {email}");
+                }
+            }
+            else
+            {
+                user.FirstName = firstName;
+                user.LastName = lastName;
+                user.BranchId = branchId;
+
+                await userManager.UpdateAsync(user);
+            }
+
+            if (!await userManager.IsInRoleAsync(user, roleName))
+            {
+                var addToRoleResult = await userManager.AddToRoleAsync(user, roleName);
+
+                if (!addToRoleResult.Succeeded)
+                {
+                    throw new InvalidOperationException($"Failed to assign role {roleName} to user {email}");
+                }
+            }
         }
 
         private static async Task SeedBranchesAsync(ApplicationDbContext dbContext)

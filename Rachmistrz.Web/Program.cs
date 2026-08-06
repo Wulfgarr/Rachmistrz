@@ -7,6 +7,7 @@ using Rachmistrz.Web.Components.Account;
 using Rachmistrz.Web.Data;
 using Rachmistrz.Web.Seed;
 using Rachmistrz.Web.Services;
+using Rachmistrz.Web.Authorization;
 
 namespace Rachmistrz.Web
 {
@@ -28,6 +29,7 @@ namespace Rachmistrz.Web
             builder.Services.AddScoped<SupplierService>();
             builder.Services.AddScoped<CostCategoryService>();
             builder.Services.AddScoped<InvoiceService>();
+            builder.Services.AddScoped<InvoicePermissionService>();
             builder.Services.AddScoped<IdentityRedirectManager>();
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
