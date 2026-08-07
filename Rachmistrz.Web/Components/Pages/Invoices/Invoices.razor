@@ -6,9 +6,13 @@
 @using Microsoft.AspNetCore.Identity
 @using Rachmistrz.Web.Data
 @using Rachmistrz.Web.DTOs
+@using Rachmistrz.Web.Enums
 @using Rachmistrz.Web.Services
+@using Rachmistrz.Web.Models
 
 @inject InvoiceService InvoiceService
+@inject SupplierService SupplierService
+@inject BranchService BranchService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
 
@@ -26,6 +30,94 @@
         Dodaj fakturę
     </MudButton>
 </div>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudText Typo="Typo.h6" Class="mb-3">
+        Filtry
+    </MudText>
+
+    <MudGrid>
+        <MudItem xs="12" md="4">
+            <MudTextField @bind-Value="_filter.InvoiceNumber"
+                          Label="Numer faktury" />
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudSelect T="InvoiceStatus?"
+                       @bind-Value="_filter.Status"
+                       Label="Status">
+                <MudSelectItem T="InvoiceStatus?" Value="null">
+                    Wszystkie
+                </MudSelectItem>
+
+                @foreach (var status in Enum.GetValues<InvoiceStatus>())
+                {
+                    <MudSelectItem T="InvoiceStatus?" Value="@status">
+                        @status
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudSelect T="int?"
+                       @bind-Value="_filter.SupplierId"
+                       Label="Dostawca">
+                <MudSelectItem T="int?" Value="null">
+                    Wszyscy
+                </MudSelectItem>
+
+                @foreach (var supplier in _suppliers)
+                {
+                    <MudSelectItem T="int?" Value="@((int?)supplier.Id)">
+                        @supplier.Name
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudSelect T="int?"
+                       @bind-Value="_filter.BranchId"
+                       Label="Oddział">
+                <MudSelectItem T="int?" Value="null">
+                    Wszystkie
+                </MudSelectItem>
+
+                @foreach (var branch in _branches)
+                {
+                    <MudSelectItem T="int?" Value="@((int?)branch.Id)">
+                        @branch.Name
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudDatePicker @bind-Date="_filter.DueDateFrom"
+                           Label="Termin płatności od" />
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudDatePicker @bind-Date="_filter.DueDateTo"
+                           Label="Termin płatności do" />
+        </MudItem>
+
+        <MudItem xs="12" Class="d-flex gap-2">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="ApplyFiltersAsync">
+                Filtruj
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       OnClick="ClearFiltersAsync">
+                Wyczyść
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
 
 @if (_isLoading)
 {
@@ -79,7 +171,17 @@ else
 
 
 @code {
+    private InvoiceFilterDto _filter = new();
+
+
     private List<InvoiceListItemDto> _invoices = [];
+    private List<Supplier> _suppliers = [];
+    private List<Branch> _branches = [];
+
+    private string _currentUserId = string.Empty;
+    private int? _currentUserBranchId;
+    private IList<string> _currentUserRoles = [];
+
     private bool _isLoading = true;
 
     protected override async Task OnInitializedAsync()
@@ -94,14 +196,37 @@ else
             return;
         }
 
-        var roles = await UserManager.GetRolesAsync(user);
+        _currentUserId = user.Id;
+        _currentUserBranchId = user.BranchId;
+        _currentUserRoles = await UserManager.GetRolesAsync(user);
 
-        _invoices = await InvoiceService.GetInvoicesAsync(
-            user.Id,
-            user.BranchId,
-            roles);
+        _suppliers = await SupplierService.GetSuppliersAsync();
+        _branches = await BranchService.GetBranchesAsync();
+
+        await LoadInvoicesAsync();
 
         _isLoading = false;
+    }
+    
+    private async Task LoadInvoicesAsync()
+    {
+        _invoices = await InvoiceService.GetInvoicesAsync(
+            _currentUserId,
+            _currentUserBranchId,
+            _currentUserRoles,
+            _filter);
+    }
+
+    private async Task ApplyFiltersAsync()
+    {
+        await LoadInvoicesAsync();
+    }
+
+    private async Task ClearFiltersAsync()
+    {
+        _filter = new InvoiceFilterDto();
+
+        await LoadInvoicesAsync();
     }
 
     private static Color GetStatusColor(Rachmistrz.Web.Enums.InvoiceStatus status)
