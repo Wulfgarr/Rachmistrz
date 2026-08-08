@@ -19,7 +19,8 @@ namespace Rachmistrz.Web.Services
         public async Task<List<InvoiceListItemDto>> GetInvoicesAsync(
             string userId,
             int? userBranchId,
-            IEnumerable<string> roles)
+            IEnumerable<string> roles,
+            InvoiceFilterDto? filter = null)
         {
 
             var query = _dbContext.Invoices
@@ -41,6 +42,45 @@ namespace Rachmistrz.Web.Services
             else
             {
                 query = query.Where(invoice => false);
+            }
+
+            if (filter is not null)
+            {
+                if (!string.IsNullOrWhiteSpace(filter.InvoiceNumber))
+                {
+                    query = query.Where(invoice =>
+                        invoice.InvoiceNumber.Contains(filter.InvoiceNumber));
+                }
+
+                if (filter.Status is not null)
+                {
+                    query = query.Where(invoice =>
+                        invoice.Status == filter.Status.Value);
+                }
+
+                if (filter.SupplierId is not null)
+                {
+                    query = query.Where(invoice =>
+                        invoice.SupplierId == filter.SupplierId.Value);
+                }
+
+                if (filter.BranchId is not null)
+                {
+                    query = query.Where(invoice =>
+                        invoice.BranchId == filter.BranchId.Value);
+                }
+
+                if (filter.DueDateFrom is not null)
+                {
+                    query = query.Where(invoice =>
+                        invoice.DueDate >= filter.DueDateFrom.Value);
+                }
+
+                if (filter.DueDateTo is not null)
+                {
+                    query = query.Where(invoice =>
+                        invoice.DueDate <= filter.DueDateTo.Value);
+                }
             }
 
             return await query
