@@ -131,7 +131,10 @@ else if (_invoices.Count == 0)
 }
 else
 {
-    <MudTable Items="_invoices" Hover="true" Dense="true">
+    <MudTable Items="_invoices"
+              Hover="true"
+              Dense="true"
+              RowsPerPage="10">
         <HeaderContent>
             <MudTh>Numer faktury</MudTh>
             <MudTh>Dostawca</MudTh>
@@ -159,13 +162,16 @@ else
             </MudTd>
             <MudTd DataLabel="Akcje">
                 <MudButton Href="@($"/invoices/{context.Id}")"
-                Variant="Variant.Outlined"
-                Color="Color.Primary"
-                Size="Size.Small">
+                           Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           Size="Size.Small">
                     Szczegóły
                 </MudButton>
-                </MudTd>
+            </MudTd>
         </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
     </MudTable>
 }
 
@@ -207,7 +213,7 @@ else
 
         _isLoading = false;
     }
-    
+
     private async Task LoadInvoicesAsync()
     {
         _invoices = await InvoiceService.GetInvoicesAsync(
