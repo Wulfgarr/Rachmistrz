@@ -1,0 +1,160 @@
+﻿@page "/dashboard"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Rachmistrz.Web.Data
+@using Rachmistrz.Web.DTOs
+@using Rachmistrz.Web.Services
+
+@inject DashboardService DashboardService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Dashboard</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Dashboard
+</MudText>
+
+@if (_isLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+    <MudAlert Severity="Severity.Error">
+        @_errorMessage
+    </MudAlert>
+}
+else if (_stats is not null)
+{
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Default">
+                    Wszystkie faktury
+                </MudText>
+                <MudText Typo="Typo.h4">
+                    @_stats.TotalInvoicesCount
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Info">
+                    Wersje robocze
+                </MudText>
+                <MudText Typo="Typo.h4">
+                    @_stats.DraftInvoicesCount
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Warning">
+                    Wysłane
+                </MudText>
+                <MudText Typo="Typo.h4">
+                    @_stats.SubmittedInvoicesCount
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Warning">
+                    W weryfikacji
+                </MudText>
+                <MudText Typo="Typo.h4">
+                    @_stats.UnderReviewInvoicesCount
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Warning">
+                    Zaakceptowane
+                </MudText>
+                <MudText Typo="Typo.h4">
+                    @_stats.ApprovedInvoicesCount
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Warning">
+                    Zaksięgowane
+                </MudText>
+                <MudText Typo="Typo.h4">
+                    @_stats.BookedInvoicesCount
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Success">
+                    Zapłacone
+                </MudText>
+                <MudText Typo="Typo.h4">
+                    @_stats.PaidInvoicesCount
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Error">
+                    Po terminie
+                </MudText>
+                <MudText Typo="Typo.h4">
+                    @_stats.OverdueInvoicesCount
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Default">
+                    Suma brutto w bieżącym miesiącu
+                </MudText>
+                <MudText Typo="Typo.h4">
+                    @_stats.CurrentMonthGrossAmount.ToString("N2") zł
+                </MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    private DashboardStatsDto? _stats;
+    private bool _isLoading = true;
+    private string _errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authenticationState.User);
+
+        if (user is null)
+        {
+            _errorMessage = "Musisz być zalogowany, aby zobaczyć dashboard.";
+            _isLoading = false;
+            return;
+        }
+
+        var roles = await UserManager.GetRolesAsync(user);
+
+        _stats = await DashboardService.GetDashboardStatsAsync(
+            user.Id,
+            user.BranchId,
+            roles);
+
+        _isLoading = false;
+    }
+}
