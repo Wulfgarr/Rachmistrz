@@ -1,0 +1,298 @@
+﻿@page "/monthly-report"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Rachmistrz.Web.Data
+@using Rachmistrz.Web.DTOs
+@using Rachmistrz.Web.Services
+
+@inject ReportService ReportService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Raport miesięczny</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Raport miesięczny
+</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudText Typo="Typo.h6" Class="mb-3">
+        Parametry raportu
+    </MudText>
+
+    <MudGrid>
+        <MudItem xs="12" md="4">
+            <MudNumericField T="int"
+                             @bind-Value="_year"
+                             Label="Rok"
+                             Min="2020"
+                             Max="2100" />
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudSelect T="int"
+                       @bind-Value="_month"
+                       Label="Miesiąc">
+                @foreach (var month in _months)
+                {
+                    <MudSelectItem T="int" Value="@month.Number">
+                        @month.Name
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12" md="4" Class="d-flex align-end">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="LoadReportAsync">
+                Pokaż raport
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_isLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+    <MudAlert Severity="Severity.Error">
+        @_errorMessage
+    </MudAlert>
+}
+else if (_report is not null)
+{
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Default">
+                    Liczba faktur
+                </MudText>
+                <MudText Typo="Typo.h4">
+                    @_report.InvoicesCount
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Default">
+                    Suma netto
+                </MudText>
+                <MudText Typo="Typo.h5">
+                    @_report.TotalNetAmount.ToString("N2") zł
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Default">
+                    Suma VAT
+                </MudText>
+                <MudText Typo="Typo.h5">
+                    @_report.TotalVatAmount.ToString("N2") zł
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Default">
+                    Suma brutto
+                </MudText>
+                <MudText Typo="Typo.h5">
+                    @_report.TotalGrossAmount.ToString("N2") zł
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Success">
+                    Zapłacone
+                </MudText>
+                <MudText Typo="Typo.h4">
+                    @_report.PaidInvoicesCount
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Warning">
+                    Niezapłacone
+                </MudText>
+                <MudText Typo="Typo.h4">
+                    @_report.UnpaidInvoicesCount
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.subtitle2" Color="Color.Error">
+                    Po terminie
+                </MudText>
+                <MudText Typo="Typo.h4">
+                    @_report.OverdueInvoicesCount
+                </MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Class="pa-4">
+        <MudText Typo="Typo.h6" Class="mb-3">
+            Faktury w raporcie
+        </MudText>
+
+        @if (_report.Invoices.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info">
+                Brak faktur dla wybranego miesiąca.
+            </MudAlert>
+        }
+        else
+        {
+            <MudTable Items="_report.Invoices"
+                      Dense="true"
+                      Hover="true"
+                      RowsPerPage="10">
+                <HeaderContent>
+                    <MudTh>Numer faktury</MudTh>
+                    <MudTh>Dostawca</MudTh>
+                    <MudTh>Oddział</MudTh>
+                    <MudTh>Data wystawienia</MudTh>
+                    <MudTh>Termin płatności</MudTh>
+                    <MudTh>Netto</MudTh>
+                    <MudTh>VAT</MudTh>
+                    <MudTh>Brutto</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Akcje</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd DataLabel="Numer faktury">
+                        @context.InvoiceNumber
+                    </MudTd>
+
+                    <MudTd DataLabel="Dostawca">
+                        @context.SupplierName
+                    </MudTd>
+
+                    <MudTd DataLabel="Oddział">
+                        @context.BranchName
+                    </MudTd>
+
+                    <MudTd DataLabel="Data wystawienia">
+                        @context.IssueDate.ToString("dd.MM.yyyy")
+                    </MudTd>
+
+                    <MudTd DataLabel="Termin płatności">
+                        @context.DueDate.ToString("dd.MM.yyyy")
+                    </MudTd>
+
+                    <MudTd DataLabel="Netto">
+                        @context.NetAmount.ToString("N2") zł
+                    </MudTd>
+
+                    <MudTd DataLabel="VAT">
+                        @context.VatAmount.ToString("N2") zł
+                    </MudTd>
+
+                    <MudTd DataLabel="Brutto">
+                        @context.GrossAmount.ToString("N2") zł
+                    </MudTd>
+
+                    <MudTd DataLabel="Status">
+                        @context.Status
+                    </MudTd>
+
+                    <MudTd DataLabel="Akcje">
+                        <MudButton Href="@($"/invoices/{context.Id}")"
+                                   Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Size="Size.Small">
+                            Szczegóły
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        }
+    </MudPaper>
+}
+
+@code {
+    private MonthlyReportDto? _report;
+    private bool _isLoading;
+    private string _errorMessage = string.Empty;
+
+    private int _year = DateTime.Today.Year;
+    private int _month = DateTime.Today.Month;
+
+    private readonly List<MonthOption> _months =
+    [
+        new(1, "Styczeń"),
+        new(2, "Luty"),
+        new(3, "Marzec"),
+        new(4, "Kwiecień"),
+        new(5, "Maj"),
+        new(6, "Czerwiec"),
+        new(7, "Lipiec"),
+        new(8, "Sierpień"),
+        new(9, "Wrzesień"),
+        new(10, "Październik"),
+        new(11, "Listopad"),
+        new(12, "Grudzień")
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReportAsync();
+    }
+
+    private async Task LoadReportAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = string.Empty;
+
+            var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = await UserManager.GetUserAsync(authenticationState.User);
+
+            if (user is null)
+            {
+                _errorMessage = "Musisz być zalogowany, aby zobaczyć raport.";
+                return;
+            }
+
+            var roles = await UserManager.GetRolesAsync(user);
+
+            _report = await ReportService.GetMonthlyReportAsync(
+                _year,
+                _month,
+                user.Id,
+                user.BranchId,
+                roles);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Nie udało się załadować raportu: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private sealed record MonthOption(int Number, string Name);
+}
