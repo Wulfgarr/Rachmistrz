@@ -29,6 +29,7 @@ namespace Rachmistrz.Web
             builder.Services.AddScoped<SupplierService>();
             builder.Services.AddScoped<CostCategoryService>();
             builder.Services.AddScoped<DashboardService>();
+            builder.Services.AddScoped<ReportService>();
             builder.Services.AddScoped<InvoiceService>();
             builder.Services.AddScoped<InvoicePermissionService>();
             builder.Services.AddScoped<IdentityRedirectManager>();
