@@ -21,6 +21,21 @@ The application allows users to create invoices, assign them to branches, suppli
 - Dashboard with invoice statistics
 - Monthly invoice report
 
+## Screenshots
+
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Invoice list
+![Invoice list](docs/screenshots/invoices_list.png)
+
+### Invoice details
+![Invoice detalis1](docs/screenshots/invoice_details_1.png)
+![Invoice detalis2](docs/screenshots/invoice_details_2.png)
+
+### Monthly report
+![Monthly report](docs/screenshots/monthly_report.png)
+
 ## Roles
 
 The application uses four main roles:
