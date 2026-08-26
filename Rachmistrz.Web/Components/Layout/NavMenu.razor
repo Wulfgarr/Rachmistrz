@@ -1,10 +1,12 @@
-﻿@implements IDisposable
+﻿@using MudBlazor
+
+@implements IDisposable
 
 @inject NavigationManager NavigationManager
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Rachmistrz.Web</a>
+        <a class="navbar-brand" href="">Rachmistrz</a>
     </div>
 </div>
 
@@ -14,39 +16,44 @@
     <nav class="nav flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/monthly-report">
-                <span class="bi bi-list-nested-nav-menu"></span> Raport miesięczny
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="branches">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Oddziały
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="suppliers">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Dostawcy
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="cost-categories">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Kategorie kosztów
+                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="me-2" />
+                Dashboard
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="invoices">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Faktury
+                <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" Class="me-2" />
+                Faktury
             </NavLink>
+        </div>
 
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="branches">
+                <MudIcon Icon="@Icons.Material.Filled.LocationCity" Size="Size.Small" Class="me-2" />
+                Oddziały
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="suppliers">
+                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" Class="me-2" />
+                Dostawcy
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="cost-categories">
+                <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Small" Class="me-2" />
+                Kategorie kosztów
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="monthly-report">
+                <MudIcon Icon="@Icons.Material.Filled.Assessment" Size="Size.Small" Class="me-2"/>
+                Raport miesięczny
+            </NavLink>
         </div>
 
         <AuthorizeView>
