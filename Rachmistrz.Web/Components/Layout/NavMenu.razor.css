@@ -12,16 +12,19 @@
 }
 
 .navbar-toggler:checked {
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 210, 0, 0.8);
 }
 
 .top-row {
     min-height: 3.5rem;
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(212,33,42,1);
 }
 
 .navbar-brand {
     font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    text-decoration: none;
 }
 
 .bi {
@@ -80,10 +83,10 @@
     }
 
     .nav-item ::deep .nav-link {
-        color: #d7d7d7;
+        color: rgb(255, 255, 255, 0.9);
         background: none;
         border: none;
-        border-radius: 4px;
+        border-radius: 6px;
         height: 3rem;
         display: flex;
         align-items: center;
@@ -92,17 +95,19 @@
     }
 
 .nav-item ::deep a.active {
-    background-color: rgba(255,255,255,0.37);
-    color: white;
+    background-color: rgba(255, 210, 0, 1);
+    color: rgba(51, 51, 51, 1);
+    font-weight: 600;
 }
 
 .nav-item ::deep .nav-link:hover {
-    background-color: rgba(255,255,255,0.1);
+    background-color: rgba(255,255,255,0.12);
     color: white;
 }
 
 .nav-scrollable {
     display: none;
+    background-color: rgba(158, 27, 34, 1);
 }
 
 .navbar-toggler:checked ~ .nav-scrollable {

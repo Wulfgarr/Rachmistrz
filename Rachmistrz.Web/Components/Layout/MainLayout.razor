@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@using MudBlazor
 
-<MudThemeProvider />
+<MudThemeProvider Theme="_rachmistrzTheme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -22,3 +23,27 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private readonly MudTheme _rachmistrzTheme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+
+            Primary = "D4212A",
+            Secondary = "FFD200",
+
+            AppbarBackground = "#D4212A",
+            AppbarText = "FFFFFF",
+
+            DrawerBackground = "#FFFFFF",
+            DrawerText = "#333333",
+
+            Background = "#F7F7F7",
+            Surface = "#FFFFFF",
+
+            TextPrimary = "#333333",
+            TextSecondary = "#666666"
+        }
+    };
+}
