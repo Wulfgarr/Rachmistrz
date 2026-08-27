@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@using MudBlazor
 
-<MudThemeProvider />
+<MudThemeProvider Theme="_rachmistrzTheme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -11,10 +12,6 @@
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
         <article class="content px-4">
             @Body
         </article>
@@ -26,3 +23,27 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private readonly MudTheme _rachmistrzTheme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+
+            Primary = "D4212A",
+            Secondary = "FFD200",
+
+            AppbarBackground = "#D4212A",
+            AppbarText = "FFFFFF",
+
+            DrawerBackground = "#FFFFFF",
+            DrawerText = "#333333",
+
+            Background = "#F7F7F7",
+            Surface = "#FFFFFF",
+
+            TextPrimary = "#333333",
+            TextSecondary = "#666666"
+        }
+    };
+}
